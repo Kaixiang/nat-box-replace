@@ -8,23 +8,22 @@ set -e
 export AWS_ACCESS_KEY_ID=$BOSH_AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=$BOSH_AWS_SECRET_ACCESS_KEY
 export AWS_DEFAULT_REGION=us-east-1
-export BOSH_VPC_PRIMARY_AZ=us-east-1b
-az=$BOSH_VPC_PRIMARY_AZ
 ######################################
 
-nat_ami=ami-ad227cc4 #amzn-ami-vpc-nat-pv-2013.09.0.x86_64-ebs
+nat_ami=ami-f619c29f
 
 ######################################
 #   Nat box information
 ######################################
-new_nat_instance_type=t1.micro
+new_nat_instance_type=m3.xlarge
 key_name=bosh
 security_group=nats_demo
 subnet_id=subnet-e5267ccd
-cf_nat_name=cf_nat_box_new_2
+cf_nat_name=cf_nat_box_xlarge
 cf_private_ip=10.8.0.10
 nat_elastic_ip=54.85.28.163
-old_nat_instance_id=i-63d94140
+old_nat_instance_id=i-8b69f2a8
+nat_zone=us-east-1b
 ######################################
 
 # Launching nat_box instance for replacing
@@ -33,7 +32,7 @@ echo "======================="
 sg_id=`aws ec2 describe-security-groups --filters Name=group-name,Values=$security_group | jq -r .SecurityGroups[].GroupId`
 
 nat_replace=`aws ec2 run-instances --image-id $nat_ami --count 1 --instance-type $new_nat_instance_type --key-name $key_name --security-group-ids $sg_id --subnet-id $subnet_id \
-   --private-ip-address $cf_private_ip | jq -r .Instances[0].InstanceId`
+   --placement AvailabilityZone=$nat_zone --private-ip-address $cf_private_ip | jq -r .Instances[0].InstanceId`
 
 echo "Waiting a while for the box spin up"
 echo "======================="
